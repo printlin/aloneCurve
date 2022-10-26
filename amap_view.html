@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>弯道算法预览</title>
+</head>
+<body>
+    <div style="height: 800px;width: 1200px;float: left;">
+        <div id="map" style="height: 800px;width: 1200px;"></div>
+    </div>
+    <div style="height: 800px;width: 300px;float: left;">
+        <textarea id="line" style="height: 800px;width: 300px;" placeholder="请填入原始轨迹或者简化轨迹"></textarea>
+        <button onclick="drawLine()">drawLine</button>
+    </div>
+    <div style="height: 800px;width: 300px;float: left;">
+        <textarea id="data" style="height: 800px;width: 300px;" placeholder="请填入弯道JSON数据"></textarea>
+        <button onclick="drawData()">drawData</button>
+    </div>
+</body>
+<script>
+    window.movingDraw = true
+</script>
+<script type="text/javascript"
+        src="https://webapi.amap.com/maps?v=2.0&key=f44efb4ed641a0eb6682e6e5bf94d545&plugin=AMap.GraspRoad,AMap.ControlBar,AMap.ToolBar,AMap.MoveAnimation"></script>
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+<script type="text/javascript">
+let map;
+    $(function () {
+        var info = document.getElementById('info');
+        map = new AMap.Map('map', {
+            center: [106.461025,29.504546],
+            mapStyle: 'amap://styles/dark', //设置地图的显示样式
+            zoom: 13,
+            viewMode: '3D',
+            rotation: 0,
+            // bj center
+            // layers: [new AMap.TileLayer.Satellite()],
+            showIndoorMap: false,
+            pitch: 0,
+            // debug: true,
+            showLabel: true,
+        });
+    })
+    
+    function drawLine(){
+        let data = JSON.parse(($("#line").val()+""));
+        var polyline = new AMap.Polyline({
+            path: data,  
+            borderWeight: 2, // 线条宽度，默认为 1
+            strokeColor: 'blue', // 线条颜色
+            lineJoin: 'round' // 折线拐点连接处样式
+        });
+        map.add(polyline);
+    }
+
+    function drawData(){
+        let data = JSON.parse(($("#data").val()+""));
+        for(d of data){
+            
+            if(d.before && d.center && d.after){
+                var polyline = new AMap.Polyline({
+                    path: [
+                        [d.before.lng, d.before.lat],
+                        [d.center.lng, d.center.lat],
+                        [d.after.lng, d.after.lat]
+                    ],  
+                    borderWeight: 2, // 线条宽度，默认为 1
+                    strokeColor: 'red', // 线条颜色
+                    lineJoin: 'round' // 折线拐点连接处样式
+                });
+                map.add(polyline);
+
+                let mark = new AMap.Marker({position: [d.center.lng, d.center.lat]});
+                mark.setLabel({
+                    content: `<div>均速：${parseInt(d.speed*10)/10.0}<br>极速：${d.maxSpeed}<br>弯角：${parseInt(d.angle*10)/10.0}</div>`
+                });
+                map.add(mark);
+            }else{console.log(d)}
+            
+        }
+    }
+</script>
+</html>
